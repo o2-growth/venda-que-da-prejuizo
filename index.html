@@ -84,9 +84,7 @@ body.locked .how,body.locked .levers,body.locked .ex:not(#cadastro),body.locked 
 body:not(.locked) #cadastro{display:none}
 #cadastro{border:1px solid var(--neon)}
 #cadastro form{display:flex;flex-direction:column;gap:14px}
-.consent{flex-direction:row;align-items:flex-start;gap:10px;font:400 14px/1.4 var(--display);letter-spacing:0;text-transform:none;color:var(--muted)}
-.consent input{width:22px;height:22px;flex:none;margin:1px 0 0;accent-color:var(--neon)}
-.consent.missing{color:var(--alert)}
+.privacy{margin:0;font-size:14px;color:var(--muted)}
 #quem{font-size:14px;color:var(--muted);margin:14px 0 0}
 #quem button{background:none;border:0;padding:0;color:var(--neon);font:inherit;text-decoration:underline;cursor:pointer}
 @media (prefers-reduced-motion:no-preference){.answer{animation:in .35s ease}@keyframes in{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}}
@@ -109,7 +107,7 @@ body:not(.locked) #cadastro{display:none}
         <label for="cad-empresa">Empresa<input id="cad-empresa" type="text" autocomplete="organization" placeholder="Nome da sua empresa"></label>
         <label for="cad-nome">Seu nome<input id="cad-nome" type="text" autocomplete="name" placeholder="Nome e sobrenome"></label>
         <label for="cad-tel">Telefone (WhatsApp)<input id="cad-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(51) 99999-9999"></label>
-        <label class="consent" for="cad-ok"><input id="cad-ok" type="checkbox"><span>Autorizo a O2 Inc. a guardar estes dados e os números que eu digitar na calculadora, e a entrar em contato comigo. Os dados não são compartilhados com ninguém.</span></label>
+        <p class="privacy">Seus dados não serão compartilhados com ninguém.</p>
         <p class="warn" id="cad-warn" hidden></p>
         <div class="actions"><button class="reveal" type="submit">Começar</button></div>
       </form>
@@ -391,7 +389,6 @@ function liberar(){
   $('trocar').addEventListener('click', ()=>{
     QUEM = null; try { localStorage.removeItem('g4calc-quem'); } catch(e){}
     ['cad-empresa','cad-nome','cad-tel'].forEach(id=>$(id).value='');
-    $('cad-ok').checked = false;
     $('quem').hidden = true;
     document.body.classList.add('locked');
     window.scrollTo(0,0);
@@ -401,7 +398,6 @@ function liberar(){
 function iniciarCadastro(){
   $('cad-tel').addEventListener('input', e=>{ e.target.value = maskTel(e.target.value); });
   $('cadastro').addEventListener('input', e=>e.target.classList.remove('missing'));
-  $('cad-ok').addEventListener('change', ()=>$('cad-ok').parentElement.classList.remove('missing'));
   $('cad-form').addEventListener('submit', e=>{
     e.preventDefault();
     const empresa=$('cad-empresa').value.trim(), nome=$('cad-nome').value.trim(), tel=$('cad-tel').value.trim();
@@ -411,16 +407,15 @@ function iniciarCadastro(){
     const digitos = tel.replace(/\D/g,'').length;
     if (digitos < 10 || digitos > 11) falta.push('cad-tel');
     falta.forEach(id=>$(id).classList.add('missing'));
-    if (!$('cad-ok').checked) $('cad-ok').parentElement.classList.add('missing');
-    if (falta.length || !$('cad-ok').checked){
-      $('cad-warn').textContent = falta.includes('cad-tel') && falta.length===1 ? 'Confira o telefone, com DDD.' : (falta.length ? 'Preencha os campos marcados em vermelho.' : 'Marque a autorização para continuar.');
+    if (falta.length){
+      $('cad-warn').textContent = falta.includes('cad-tel') && falta.length===1 ? 'Confira o telefone, com DDD.' : 'Preencha os campos marcados em vermelho.';
       $('cad-warn').hidden = false;
       return;
     }
     $('cad-warn').hidden = true;
     QUEM = {id:novoId(), empresa, nome, telefone:tel};
     guardar('g4calc-quem', QUEM);
-    enviar({consentimento:'Sim', origem:ORIGEM});
+    enviar({origem:ORIGEM});
     liberar();
     window.scrollTo(0,0);
   });
