@@ -80,16 +80,41 @@ input.missing{border-color:var(--alert)}
 .warn{color:var(--alert);font-size:14px;margin:-6px 0 0}
 .hint{font:500 12px var(--mono);color:var(--neon);text-transform:none;letter-spacing:0;min-height:1em}
 .ex-btn{background:transparent;color:var(--neon);border-color:var(--neon);font-weight:500}
+body.locked .how,body.locked .levers,body.locked .ex:not(#cadastro),body.locked .ritual,body.locked #quem{display:none}
+body:not(.locked) #cadastro{display:none}
+#cadastro{border:1px solid var(--neon)}
+#cadastro form{display:flex;flex-direction:column;gap:14px}
+.consent{flex-direction:row;align-items:flex-start;gap:10px;font:400 14px/1.4 var(--display);letter-spacing:0;text-transform:none;color:var(--muted)}
+.consent input{width:22px;height:22px;flex:none;margin:1px 0 0;accent-color:var(--neon)}
+.consent.missing{color:var(--alert)}
+#quem{font-size:14px;color:var(--muted);margin:14px 0 0}
+#quem button{background:none;border:0;padding:0;color:var(--neon);font:inherit;text-decoration:underline;cursor:pointer}
 @media (prefers-reduced-motion:no-preference){.answer{animation:in .35s ease}@keyframes in{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}}
 </style>
 </head>
-<body>
+<body class="locked">
 
 <div class="wrap">
   <header>
     <div class="eyebrow">G4 Sales · aula presencial com Pedro Albite</div>
     <h1>A venda que <span>dá prejuízo</span></h1>
-    <p class="lead">As 3 alavancas da aula, com os números da sua empresa. Nada do que você digita sai do seu celular.</p>
+    <p class="lead">As 3 alavancas da aula, com os números da sua empresa.</p>
+    <section class="ex" id="cadastro" aria-labelledby="cad-h">
+      <div>
+        <span class="lever">Antes de começar</span>
+        <h2 id="cad-h">Quem está fazendo o exercício?</h2>
+        <p>Leva 20 segundos. Depois é só preencher as alavancas.</p>
+      </div>
+      <form id="cad-form" novalidate>
+        <label for="cad-empresa">Empresa<input id="cad-empresa" type="text" autocomplete="organization" placeholder="Nome da sua empresa"></label>
+        <label for="cad-nome">Seu nome<input id="cad-nome" type="text" autocomplete="name" placeholder="Nome e sobrenome"></label>
+        <label for="cad-tel">Telefone (WhatsApp)<input id="cad-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(51) 99999-9999"></label>
+        <label class="consent" for="cad-ok"><input id="cad-ok" type="checkbox"><span>Autorizo a O2 Inc. a guardar estes dados e os números que eu digitar na calculadora, e a entrar em contato comigo. Os dados não são compartilhados com ninguém.</span></label>
+        <p class="warn" id="cad-warn" hidden></p>
+        <div class="actions"><button class="reveal" type="submit">Começar</button></div>
+      </form>
+    </section>
+    <p id="quem" hidden></p>
     <div class="how">
       <div class="eyebrow">Como funciona</div>
       <ol>
@@ -209,6 +234,7 @@ function short(v){
   return s+brl(a);
 }
 
+const LAST = {};
 const DEFAULTS = {
   receita:{'d-preco':100,'d-imp':15,'d-custo':40,'d-desc':10},
   resultado:{'c-com':5},
@@ -255,6 +281,7 @@ function calcReceita(){
   $('d-calc').innerHTML = `Preço ${brl2(p1)} · impostos ${brl2(p1*t)} · custo ${brl2(c)}<br>Margem: ${brl2(m0)} → ${brl2(m1)}`+(extra!==null?`<br>${brl2(m0)} ÷ ${brl2(m1)} = ${(m0/m1).toLocaleString('pt-BR',{maximumFractionDigits:2})}`:'');
   $('r-desc').textContent = pct(d*100);
   $('r-desc-s').textContent = extra!==null ? `Custa +${pct(extra)} de volume para empatar.` : 'Com esse desconto a venda não deixa margem.';
+  LAST.receita = {a1_preco:p, a1_impostos:t*100, a1_custo:c, a1_desconto:d*100, a1_volume: extra!==null ? +extra.toFixed(1) : big.textContent};
 }
 
 function calcResultado(){
@@ -279,6 +306,7 @@ function calcResultado(){
   const tot = list.reduce((s,c)=>s+c.f,0), totMc = list.reduce((s,c)=>s+c.mc,0);
   $('r-mar').textContent = tot ? pct(totMc/tot*100) : '0%';
   $('r-mar-s').textContent = `Média da carteira. Pior cliente: ${cLabel(worst.i)}, com ${pct(worst.m)}.`;
+  LAST.resultado = {a2_comissao:com*100, a2_clientes: list.map(c=>`${cLabel(c.i)}: ${brl(c.f)} · ${pct(c.m)}`).join('; '), a2_posicao: pos+'º', a2_margem_media: tot ? +(totMc/tot*100).toFixed(1) : 0};
 }
 
 function calcLiquidez(){
@@ -290,6 +318,7 @@ function calcLiquidez(){
   $('p-calc').innerHTML = `${brl(f)} por ano ÷ 360 = ${brl(dia)} por dia<br>${brl(dia)} × ${d.toLocaleString('pt-BR')} dias = ${brl(parado)}<br>Ciclo financeiro = PME + PMR − PMP`;
   $('r-prazo').textContent = hoje.toLocaleString('pt-BR') + ' dias';
   $('r-prazo-s').textContent = `Cada dia a mais prende ${short(dia)}.`;
+  LAST.liquidez = {a3_faturamento:f, a3_prazo_hoje:hoje, a3_dias_a_mais:d, a3_parado:Math.round(parado)};
 }
 
 const SECTIONS = ['receita','resultado','liquidez'];
@@ -305,11 +334,19 @@ function recalc(){
   });
 }
 
-document.addEventListener('input', e=>{ if (e.target.value.trim()!=='') e.target.classList.remove('missing'); recalc(); });
+document.addEventListener('input', e=>{
+  if (e.target.closest('#cadastro')) return;
+  if (e.target.value.trim()!=='') e.target.classList.remove('missing');
+  recalc();
+  const sec = e.target.closest('section.ex')?.id;
+  if (sec && !$(document.querySelector(`[data-sec="${sec}"]`).dataset.show).hidden) agendarEnvio(sec);
+});
 document.querySelectorAll('[data-show]').forEach(b=>b.addEventListener('click',()=>{
   const sec=b.dataset.sec, a=$(b.dataset.show);
   if (a.hidden && !complete(sec)){ markMissing(sec); $(sec+'-warn').hidden=false; return; }
-  setAnswer(sec, a.hidden);
+  const abrir = a.hidden;
+  setAnswer(sec, abrir);
+  if (abrir) enviar(LAST[sec]);
 }));
 function setSection(sec, withValues){
   Object.entries(DEFAULTS[sec]).forEach(([id,v])=>{ $(id).value = withValues ? v : ''; });
@@ -321,8 +358,79 @@ function setSection(sec, withValues){
 document.querySelectorAll('[data-fill]').forEach(b=>b.addEventListener('click',()=>setSection(b.dataset.fill,true)));
 document.querySelectorAll('[data-clear]').forEach(b=>b.addEventListener('click',()=>setSection(b.dataset.clear,false)));
 
+const ENDPOINT = 'https://script.google.com/macros/s/AKfycbxOk-KVEbKW5zMgupjgTIl1TxEEHsYWzf82XE9xg7VE0NKXfTw8BNma53KU_Utfg5-AUg/exec';
+const ORIGEM = 'G4 Sales presencial 26/10/2026' + (new URLSearchParams(location.search).get('utm_source') ? ' · ' + new URLSearchParams(location.search).get('utm_source') : '');
+let QUEM = null;
+const guardar = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+const ler = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } };
+const novoId = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+
+function enviar(dados){
+  if (!QUEM || !dados) return;
+  const corpo = Object.assign({id:QUEM.id, empresa:QUEM.empresa, nome:QUEM.nome, telefone:QUEM.telefone}, dados);
+  fetch(ENDPOINT, {method:'POST', mode:'no-cors', keepalive:true, headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(corpo)}).catch(()=>{});
+}
+const timers = {};
+function agendarEnvio(sec){
+  clearTimeout(timers[sec]);
+  timers[sec] = setTimeout(()=>{ if (complete(sec)) enviar(LAST[sec]); }, 2500);
+}
+
+function maskTel(v){
+  const d = v.replace(/\D/g,'').slice(0,11);
+  if (d.length <= 2) return d.length ? '(' + d : '';
+  if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+}
+
+function liberar(){
+  document.body.classList.remove('locked');
+  $('quem').hidden = false;
+  $('quem').innerHTML = `Fazendo como <b>${esc(QUEM.nome)}</b> · ${esc(QUEM.empresa)}. <button type="button" id="trocar">Não é você?</button>`;
+  $('trocar').addEventListener('click', ()=>{
+    QUEM = null; try { localStorage.removeItem('g4calc-quem'); } catch(e){}
+    ['cad-empresa','cad-nome','cad-tel'].forEach(id=>$(id).value='');
+    $('cad-ok').checked = false;
+    $('quem').hidden = true;
+    document.body.classList.add('locked');
+    window.scrollTo(0,0);
+  });
+}
+
+function iniciarCadastro(){
+  $('cad-tel').addEventListener('input', e=>{ e.target.value = maskTel(e.target.value); });
+  $('cadastro').addEventListener('input', e=>e.target.classList.remove('missing'));
+  $('cad-ok').addEventListener('change', ()=>$('cad-ok').parentElement.classList.remove('missing'));
+  $('cad-form').addEventListener('submit', e=>{
+    e.preventDefault();
+    const empresa=$('cad-empresa').value.trim(), nome=$('cad-nome').value.trim(), tel=$('cad-tel').value.trim();
+    const falta=[];
+    if (!empresa) falta.push('cad-empresa');
+    if (!nome) falta.push('cad-nome');
+    const digitos = tel.replace(/\D/g,'').length;
+    if (digitos < 10 || digitos > 11) falta.push('cad-tel');
+    falta.forEach(id=>$(id).classList.add('missing'));
+    if (!$('cad-ok').checked) $('cad-ok').parentElement.classList.add('missing');
+    if (falta.length || !$('cad-ok').checked){
+      $('cad-warn').textContent = falta.includes('cad-tel') && falta.length===1 ? 'Confira o telefone, com DDD.' : (falta.length ? 'Preencha os campos marcados em vermelho.' : 'Marque a autorização para continuar.');
+      $('cad-warn').hidden = false;
+      return;
+    }
+    $('cad-warn').hidden = true;
+    QUEM = {id:novoId(), empresa, nome, telefone:tel};
+    guardar('g4calc-quem', QUEM);
+    enviar({consentimento:'Sim', origem:ORIGEM});
+    liberar();
+    window.scrollTo(0,0);
+  });
+  const salvo = ler('g4calc-quem');
+  if (salvo && salvo.id && salvo.empresa && salvo.nome && salvo.telefone){ QUEM = salvo; liberar(); }
+}
+
 buildRows(false);
 recalc();
+iniciarCadastro();
 </script>
 </body>
 </html>
