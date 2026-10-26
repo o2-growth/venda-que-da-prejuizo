@@ -1,0 +1,258 @@
+<title>A venda que dá prejuízo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* Coluna única para celular: cabeçalho, 3 alavancas em sequência, quadro final de rituais com os números do aluno */
+:root{
+  --bg:#151515; --surface:#1d1e1c; --field:#262825; --line:#333631;
+  --fg:#f1f3ef; --muted:#a2a89f; --neon:#63F161; --neon-soft:rgba(99,241,97,.12); --alert:#ff7a6b;
+  --display:'Space Grotesk',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--display);margin:0}
+.wrap{max-width:720px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--neon)}
+h1{font-size:clamp(34px,9vw,54px);line-height:1;margin:12px 0 14px;text-transform:uppercase;text-wrap:balance}
+h1 span{color:var(--neon)}
+h2{font-size:22px;line-height:1.2;margin:6px 0 8px;text-wrap:balance}
+.lead{color:var(--muted);margin:0 0 10px;max-width:60ch}
+.levers{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.levers a{font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--fg);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:8px 12px}
+.levers a:hover{border-color:var(--neon)}
+.ex{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:16px}
+.ex p{margin:0;color:var(--muted)}
+.lever{display:inline-block;font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;background:var(--neon);color:#111;border-radius:6px;padding:5px 8px;margin-bottom:10px}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:flex;flex-direction:column;gap:6px;font:500 11px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input{width:100%;background:var(--field);border:1px solid var(--line);border-radius:10px;color:var(--fg);font:500 17px var(--display);padding:11px 12px;font-variant-numeric:tabular-nums}
+input:focus-visible,button:focus-visible,.levers a:focus-visible{outline:2px solid var(--neon);outline-offset:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+button{font:700 15px var(--display);border-radius:999px;padding:12px 20px;cursor:pointer;border:1px solid var(--neon)}
+.reveal{background:var(--neon);color:#111}
+.reset{background:transparent;color:var(--fg);border-color:var(--line);font-weight:500}
+.answer{background:var(--neon-soft);border:1px solid rgba(99,241,97,.35);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.big{font:700 clamp(38px,11vw,56px)/1 var(--display);color:var(--neon);font-variant-numeric:tabular-nums}
+.big.bad{color:var(--alert)}
+.answer .txt{color:var(--fg);margin:0}
+.calc{font:500 13px/1.6 var(--mono);color:var(--muted)}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums;min-width:440px}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
+th{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td input{padding:8px 9px;font-size:15px}
+.dre td:first-child{color:var(--muted)}
+.dre tr.total td{font-weight:700;border-top:1px solid var(--fg)}
+.neg{color:var(--alert)!important}
+.rank{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.rank ol{margin:6px 0 0;padding-left:22px;color:var(--fg)}
+.rank li{margin:3px 0}
+.rank .hl{color:var(--alert);font-weight:700}
+.tip{font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.ritual{border:1px solid var(--neon);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:16px;background:var(--surface)}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.tile{background:var(--field);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.tile .k{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tile .v{font:700 28px/1.05 var(--display);font-variant-numeric:tabular-nums;color:var(--fg)}
+.tile .s{font-size:13px;color:var(--muted)}
+footer{color:var(--muted);font-size:14px;text-align:center}
+footer b{color:var(--fg)}
+@media (max-width:560px){.tiles{grid-template-columns:1fr}}
+@media (max-width:460px){.fields,.rank{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){.answer{animation:in .35s ease}@keyframes in{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">G4 Sales · aula presencial com Pedro Albite</div>
+    <h1>A venda que <span>dá prejuízo</span></h1>
+    <p class="lead">As 3 alavancas da aula online, agora com os números da sua empresa. Os campos já vêm com o exemplo do Pedro: troque pelos seus. Nada do que você digita sai do seu celular.</p>
+    <nav class="levers" aria-label="Alavancas">
+      <a href="#receita">1 · Receita</a><a href="#resultado">2 · Resultado</a><a href="#liquidez">3 · Liquidez</a><a href="#rituais">Rituais</a>
+    </nav>
+  </header>
+
+  <section class="ex" id="receita">
+    <div>
+      <span class="lever">Alavanca 1 · Receita</span>
+      <h2>“Dá 10% que eu fecho.”</h2>
+      <p>Quanto você precisa vender a mais para a empresa ganhar o mesmo dinheiro depois do desconto?</p>
+    </div>
+    <div class="fields">
+      <label for="d-preco">Preço de venda (R$)<input id="d-preco" type="number" inputmode="decimal" step="any" value="100"></label>
+      <label for="d-imp">Impostos sobre a venda (%)<input id="d-imp" type="number" inputmode="decimal" step="any" value="15"></label>
+      <label for="d-custo">Custo direto (R$)<input id="d-custo" type="number" inputmode="decimal" step="any" value="40"></label>
+      <label for="d-desc">Desconto que você costuma dar (%)<input id="d-desc" type="number" inputmode="decimal" step="any" value="10"></label>
+    </div>
+    <div class="actions"><button class="reveal" data-show="d-ans">Ver resposta</button><button class="reset" data-reset="receita">Voltar ao exemplo do Pedro</button></div>
+    <div class="answer" id="d-ans" hidden>
+      <div class="big" id="d-big"></div>
+      <p class="txt" id="d-txt"></p>
+      <div class="calc" id="d-calc"></div>
+    </div>
+  </section>
+
+  <section class="ex" id="resultado">
+    <div>
+      <span class="lever">Alavanca 2 · Resultado</span>
+      <h2>“Nem todo cliente deixa dinheiro.”</h2>
+      <p>Coloque os seus 5 maiores clientes. Veja quem fica em primeiro pelo faturamento e quem fica em primeiro pelo que sobra depois da margem e da comissão.</p>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Cliente</th><th>Faturamento/ano (R$)</th><th>Margem de contribuição (%)</th></tr></thead>
+        <tbody id="c-rows"></tbody>
+      </table>
+    </div>
+    <div class="fields">
+      <label for="c-com">Comissão sobre faturamento (%)<input id="c-com" type="number" inputmode="decimal" step="any" value="5"></label>
+    </div>
+    <div class="actions"><button class="reveal" data-show="c-ans">Ver resposta</button><button class="reset" data-reset="resultado">Voltar ao exemplo do Pedro</button></div>
+    <div class="answer" id="c-ans" hidden>
+      <div class="rank">
+        <div><div class="eyebrow">Por faturamento</div><ol id="c-byfat"></ol></div>
+        <div><div class="eyebrow">Pelo que sobra</div><ol id="c-bysob"></ol></div>
+      </div>
+      <p class="txt" id="c-txt"></p>
+      <div class="eyebrow" style="margin-top:6px">Cada cliente como uma DRE</div>
+      <div class="tbl">
+        <table class="dre">
+          <thead><tr id="c-head"></tr></thead>
+          <tbody id="c-dre"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="tip">O exemplo do Pedro usa clientes fictícios. A comissão entra na DRE como despesa comercial: ela sai do que sobra para pagar a estrutura da empresa.</p>
+  </section>
+
+  <section class="ex" id="liquidez">
+    <div>
+      <span class="lever">Alavanca 3 · Liquidez</span>
+      <h2>“Ele só fecha se for em 60 dias.”</h2>
+      <p>Cada dia de prazo que o comercial dá é dinheiro da empresa parado no bolso do cliente. Quanto custa o seu prazo?</p>
+    </div>
+    <div class="fields">
+      <label for="p-fat">Faturamento por ano (R$)<input id="p-fat" type="number" inputmode="decimal" step="any" value="30000000"></label>
+      <label for="p-hoje">Prazo médio de recebimento hoje (dias)<input id="p-hoje" type="number" inputmode="decimal" step="any" value="60"></label>
+      <label for="p-dias">Dias a mais de prazo<input id="p-dias" type="number" inputmode="decimal" step="any" value="30"></label>
+    </div>
+    <div class="actions"><button class="reveal" data-show="p-ans">Ver resposta</button><button class="reset" data-reset="liquidez">Voltar ao exemplo do Pedro</button></div>
+    <div class="answer" id="p-ans" hidden>
+      <div class="big" id="p-big"></div>
+      <p class="txt" id="p-txt"></p>
+      <div class="calc" id="p-calc"></div>
+    </div>
+  </section>
+
+  <section class="ritual" id="rituais">
+    <div>
+      <span class="lever">Rituais de gestão</span>
+      <h2>Seus 3 números da semana</h2>
+      <p class="lead" style="margin:0">O que sustenta as três alavancas é olhar para elas toda semana. Leve estes números para a sua reunião comercial.</p>
+    </div>
+    <div class="tiles">
+      <div class="tile"><span class="k">Desconto médio</span><span class="v" id="r-desc"></span><span class="s" id="r-desc-s"></span></div>
+      <div class="tile"><span class="k">Margem por cliente</span><span class="v" id="r-mar"></span><span class="s" id="r-mar-s"></span></div>
+      <div class="tile"><span class="k">Prazo médio de recebimento</span><span class="v" id="r-prazo"></span><span class="s" id="r-prazo-s"></span></div>
+    </div>
+  </section>
+
+  <footer><b>Pedro Albite</b> · CEO e fundador da O2 Inc.<br>@pedroalbite · @o2.inc</footer>
+</div>
+
+<script>
+const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const brl2 = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
+const pct = v => v.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
+const $ = id => document.getElementById(id);
+const num = id => parseFloat($(id).value) || 0;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function short(v){
+  const a = Math.abs(v), s = v < 0 ? '−' : '';
+  if (a >= 1e6) return s+'R$ ' + (a/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1}) + ' mi';
+  if (a >= 1e3) return s+'R$ ' + Math.round(a/1e3).toLocaleString('pt-BR') + ' mil';
+  return s+brl(a);
+}
+
+const DEFAULTS = {
+  receita:{'d-preco':100,'d-imp':15,'d-custo':40,'d-desc':10},
+  resultado:{'c-com':5},
+  liquidez:{'p-fat':30000000,'p-hoje':60,'p-dias':30}
+};
+const CLIENTS = [['A',1200000,8],['B',800000,22],['C',600000,35],['D',450000,12],['E',300000,40]];
+
+function buildRows(data){
+  $('c-rows').innerHTML = data.map((c,i)=>
+    `<tr><td><input id="c-n${i}" type="text" value="${c[0]}" aria-label="Nome do cliente ${i+1}"></td>`+
+    `<td><input id="c-f${i}" type="number" inputmode="decimal" step="any" value="${c[1]}" aria-label="Faturamento do cliente ${i+1}"></td>`+
+    `<td><input id="c-m${i}" type="number" inputmode="decimal" step="any" value="${c[2]}" aria-label="Margem do cliente ${i+1}"></td></tr>`
+  ).join('');
+}
+
+function calcReceita(){
+  const p=num('d-preco'), t=num('d-imp')/100, c=num('d-custo'), d=num('d-desc')/100;
+  const m0 = p*(1-t)-c, p1 = p*(1-d), m1 = p1*(1-t)-c;
+  const big=$('d-big');
+  let extra = null;
+  if (m0 <= 0){ big.textContent='Sem margem'; big.className='big bad'; $('d-txt').textContent='Mesmo sem desconto, essa venda já não deixa dinheiro.'; }
+  else if (m1 <= 0){ big.textContent='Prejuízo'; big.className='big bad'; $('d-txt').textContent='Com esse desconto, cada venda tira dinheiro da empresa. Não existe volume que compense.'; }
+  else {
+    extra = (m0/m1-1)*100;
+    big.textContent='+'+pct(extra); big.className='big';
+    $('d-txt').textContent=`de volume só para empatar. A margem por venda cai de ${brl2(m0)} para ${brl2(m1)}.`;
+  }
+  $('d-calc').innerHTML = `Preço ${brl2(p1)} · impostos ${brl2(p1*t)} · custo ${brl2(c)}<br>Margem: ${brl2(m0)} → ${brl2(m1)}`+(extra!==null?`<br>${brl2(m0)} ÷ ${brl2(m1)} = ${(m0/m1).toLocaleString('pt-BR',{maximumFractionDigits:2})}`:'');
+  $('r-desc').textContent = pct(d*100);
+  $('r-desc-s').textContent = extra!==null ? `Custa +${pct(extra)} de volume para empatar.` : 'Com esse desconto a venda não deixa margem.';
+}
+
+function calcResultado(){
+  const com=num('c-com')/100;
+  const list = CLIENTS.map((_,i)=>{
+    const f=num('c-f'+i), m=num('c-m'+i);
+    return {n:esc($('c-n'+i).value||('Cliente '+(i+1))), f, m, mc:f*m/100, co:f*com};
+  });
+  list.forEach(c=>c.sob=c.mc-c.co);
+  const byF=[...list].sort((a,b)=>b.f-a.f), byS=[...list].sort((a,b)=>b.sob-a.sob);
+  const top=byF[0], pos=byS.indexOf(top)+1;
+  $('c-byfat').innerHTML = byF.map(c=>`<li${c===top?' class="hl"':''}>${c.n} · ${short(c.f)}</li>`).join('');
+  $('c-bysob').innerHTML = byS.map(c=>`<li${c===top?' class="hl"':''}>${c.n} · ${short(c.sob)}</li>`).join('');
+  $('c-txt').textContent = pos>1
+    ? `O maior cliente, ${$('c-n'+list.indexOf(top)).value||'o primeiro'}, cai para ${pos}º lugar quando a régua é o resultado. A comissão leva ${short(top.co)} dos ${short(top.mc)} de margem dele.`
+    : `O maior cliente também é o que mais deixa resultado. A comissão leva ${short(top.co)} dos ${short(top.mc)} de margem dele.`;
+  $('c-head').innerHTML = '<th></th>' + list.map(c=>`<th>${c.n}</th>`).join('');
+  const row = (label, key, cls='') => `<tr class="${cls}"><td>${label}</td>` + list.map(c=>`<td class="${c[key]<0?'neg':''}">${short(c[key])}</td>`).join('') + '</tr>';
+  $('c-dre').innerHTML = row('Faturamento','f') + row('Margem de contribuição','mc') + row('(−) Comissão','co') + row('Sobra para a estrutura','sob','total');
+  const worst = [...list].sort((a,b)=>a.m-b.m)[0];
+  const tot = list.reduce((s,c)=>s+c.f,0), totMc = list.reduce((s,c)=>s+c.mc,0);
+  $('r-mar').textContent = tot ? pct(totMc/tot*100) : '0%';
+  $('r-mar-s').textContent = `Média da carteira. Pior cliente: ${$('c-n'+list.indexOf(worst)).value||'sem nome'}, com ${pct(worst.m)}.`;
+}
+
+function calcLiquidez(){
+  const f=num('p-fat'), hoje=num('p-hoje'), d=num('p-dias'), dia=f/360, parado=dia*d;
+  $('p-big').textContent = short(parado);
+  $('p-txt').textContent = `a mais de dinheiro da empresa parado no cliente. Hoje, com ${hoje.toLocaleString('pt-BR')} dias de prazo, já são ${short(dia*hoje)}.`;
+  $('p-calc').innerHTML = `${brl(f)} por ano ÷ 360 = ${brl(dia)} por dia<br>${brl(dia)} × ${d.toLocaleString('pt-BR')} dias = ${brl(parado)}<br>Ciclo financeiro = PME + PMR − PMP`;
+  $('r-prazo').textContent = hoje.toLocaleString('pt-BR') + ' dias';
+  $('r-prazo-s').textContent = `Cada dia a mais prende ${short(dia)}.`;
+}
+
+function recalc(){ calcReceita(); calcResultado(); calcLiquidez(); }
+
+document.addEventListener('input', recalc);
+document.querySelectorAll('[data-show]').forEach(b=>b.addEventListener('click',()=>{
+  const a=$(b.dataset.show); a.hidden=!a.hidden; b.textContent=a.hidden?'Ver resposta':'Esconder resposta';
+}));
+document.querySelectorAll('[data-reset]').forEach(b=>b.addEventListener('click',()=>{
+  const k=b.dataset.reset;
+  Object.entries(DEFAULTS[k]).forEach(([id,v])=>$(id).value=v);
+  if (k==='resultado') buildRows(CLIENTS);
+  recalc();
+}));
+
+buildRows(CLIENTS);
+recalc();
+</script>
